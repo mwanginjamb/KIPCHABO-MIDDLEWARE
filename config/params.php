@@ -33,7 +33,7 @@ return [
 
     ],
     'codeUnits' => [
-
+        'MobileCodeunit'
     ],
     'ServiceName' =>[
 
@@ -56,7 +56,16 @@ return [
         'LocationList' => 'LocationList', // 15 (Page)
         'UnitMeasure' => 'UnitMeasure', //5404 (Page)
 
+        'Payments' => 'Payments', //70309 (Page)
+        'ReceiptCard' => 'ReceiptCard', // 70310 (Page)
+        'CashReceiptLines' => 'CashReceiptLines', // (Page) 70311
+        'CustomerLedgerEntries' => 'CustomerLedgerEntries', // Page 25
+        'BankAccounts' => 'BankAccounts', // 371 (Page)
+
         'Dimensions' => 'Dimensions', // 560 (Page)
+        'CustomerList' => 'CustomerList', //22 (Page)
+
+        'MobileCodeunit' => 'MobileCodeunit', // 500013 - Codeunit
     ],
     'QualificationsMimeTypes' => [
 

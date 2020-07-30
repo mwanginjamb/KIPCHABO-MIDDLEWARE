@@ -860,6 +860,20 @@ class Navision extends Component
 
     }
 
+    // Insert Invoice Line
+
+    public function IanMobile($credentials, $soapWsdl, $Entry, $WsdlMethod)
+    {
+        $client = $this->createClient($credentials, $soapWsdl);
+        try {
+            $result = $client->$WsdlMethod($Entry);
+            return $result;
+        } catch (\SoapFault $e) {
+            return $e->getMessage();
+        }
+
+    }
+
 
 
 

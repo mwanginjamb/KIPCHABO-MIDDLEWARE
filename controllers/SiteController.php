@@ -11,6 +11,9 @@ use yii\web\Response;
 
 use backend\models\Requisitionline;
 use backend\models\Requisition;
+use backend\models\Salesinvoiceline;
+use backend\models\Salesinvoice;
+use backend\models\Receipt;
 
 /**
  * Site controller
@@ -20,7 +23,16 @@ class SiteController extends Controller
 
    public function beforeAction($action)
     {            
-        if ($action->id == 'addline' || $action->id == 'update-requisition' || $action->id == 'updaterequisitionline') {
+        if (
+            $action->id == 'addline' || 
+            $action->id == 'update-requisition' || 
+            $action->id == 'updaterequisitionline' ||
+            $action->id == 'update-invoice' ||
+            $action->id == 'updatesalesinvoiceline' ||
+            $action->id == 'addsalesinvoiceline' ||
+            $action->id == 'create-invoice' ||
+            $action->id == 'updatecashreceipt'
+        ) {
             $this->enableCsrfValidation = false;
         }
 
@@ -69,7 +81,21 @@ class SiteController extends Controller
                             'getline',
                             'updaterequisitionline',
                             'saleorders',
-                            'salesorder'
+                            'salesorder',
+                            'saleinvoices',
+                            'saleinvoice',
+                            'getsalesinvoiceline',
+                            'update-invoice',
+                            'updatesalesinvoiceline',
+                            'addsalesinvoiceline',
+                            'create-invoice',
+                            'receipt',
+                            'receipting-customers',
+                            'customerledgerentries',
+                            'newpayment',
+                            'updatecashreceipt',
+                            'suggestlines',
+                            'refreshreceipt'
                         ],
                         'allow' => true,
                         'roles' => ['?'],
@@ -97,7 +123,20 @@ class SiteController extends Controller
                     'getline',
                     'updaterequisitionline',
                     'saleorders',
-                    'salesorder'
+                    'salesorder',
+                    'saleinvoices',
+                    'saleinvoice',
+                    'getsalesinvoiceline',
+                    'update-invoice',
+                    'updatesalesinvoiceline',
+                    'addsalesinvoiceline',
+                    'create-invoice',
+                    'receipt',
+                    'receipting-customers',
+                    'customerledgerentries',
+                    'newpayment',
+                    'updatecashreceipt',
+                    'suggestlines',
                 ],
                 'formatParam' => '_format',
                 'formats' => [
@@ -216,6 +255,46 @@ class SiteController extends Controller
     {
 
         $service = Yii::$app->params['ServiceName']['SalesOrder'];
+        $filter = [
+            'No' => $id ,
+            ];
+
+        $results = Yii::$app->Navhelper->getData($service, $filter);
+
+        if(is_array($results))
+        {
+            return $results[0];
+        }else
+        {
+            return $results;
+        }
+    }
+
+    /* Get a list of all Sale Invoices */
+
+    public function actionSaleinvoices() {
+        $service = Yii::$app->params['ServiceName']['SalesInvoiceList'];
+        $filter = [];
+
+        $results = Yii::$app->Navhelper->getData($service, $filter );
+
+        if(is_array($results))
+        {
+            return $results;
+        }else
+        {
+            return $results;
+        }
+
+    }
+
+
+    /* Get a Sales Invoice Card */
+
+    public function actionSaleinvoice($id )
+    {
+
+        $service = Yii::$app->params['ServiceName']['SalesInvoice'];
         $filter = [
             'No' => $id ,
             ];
@@ -375,12 +454,25 @@ class SiteController extends Controller
     public function actionAddline() {
 
         $model = new Requisitionline();
-        $service = Yii::$app->params['ServiceName']['RequisitionLines'];
+        $service = Yii::$app->params['ServiceName']['MobileCodeunit'];
 
         // Takes raw data from the request
         $json = file_get_contents('php://input');
         // Convert it into a PHP object
         $data = json_decode($json);
+
+
+         // Call Mobile Code Unit
+
+        $args = [
+            'itemNo'=> $data->Item_No,
+            'piecesVar' => $data->Pieces,
+            'unitOfMeasure' => $data->Unit,
+            'docNo' => $data->Document_No,
+        ];
+
+        $res = Yii::$app->Navhelper->Mobile($service,$args,'IanCreateTransferOrderLines');
+        return $res;
 
         // Update the model with data from POS
 
@@ -411,6 +503,60 @@ class SiteController extends Controller
         
     }
 
+    /* Add Sales Invoice Line */
+
+    public function actionAddsalesinvoiceline() {
+
+        $model = new Salesinvoiceline();
+        $service = Yii::$app->params['ServiceName']['MobileCodeunit'];
+
+        // Takes raw data from the request
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+        // Call Mobile Code Unit
+
+        $args = [
+            'itemNo'=> $data->No,
+            'location' => $data->Location_Code,
+            'quantityVar' => $data->Quantity,
+            'unitPrice' => $data->Unit_Price,
+            'unitOfMeasure' => $data->Unit_of_Measure_Code,
+            'docNo' => $data->Document_No
+        ];
+
+        $res = Yii::$app->Navhelper->Mobile($service,$args,'IanCreateSalesInvoiceLines');
+        return $res;
+
+        // Update the model with data from POS
+
+        $model->Document_No = $data->Document_No;
+        $model->Type = 'Item';
+        $initial = Yii::$app->Navhelper->postData($service,$model);
+       
+        //return $initial;
+        //Update Rest of the line info, if initial request to ERP is successfull
+       
+        if(!is_string($initial))
+        {
+            $model->Key = $initial->Key;            
+            $model->No = $data->No;
+            $model->Unit_of_Measure_Code = $data->Unit_of_Measure_Code;
+            $model->Quantity = $model->Quantity;
+           
+
+            // $model->Pieces = $data->Pieces; Not Updating on Model
+            $model = Yii::$app->Navhelper->loadmodel($initial,$model);
+        }else{
+            return ['error' => $initial];
+        }
+         
+        $results = Yii::$app->Navhelper->updateData($service, $model); // Complete line requisition 
+        return $results;
+        
+    }
+
     public function actionUpdaterequisitionline()
     {
         $model = new Requisitionline();
@@ -431,9 +577,53 @@ class SiteController extends Controller
 
     }
 
+    /* Update Sales Invoice Line */
+
+    public function actionUpdatesalesinvoiceline()
+    {
+        $model = new Salesinvoiceline();
+        $service = Yii::$app->params['ServiceName']['SalesInvoiceLine'];
+        // Takes raw data from the request
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+        /* Read only fields that you wanna skip on model data bind */
+        $skip = [
+            'TotalSalesLine_Line_Amount',
+            'Total_Amount_Excl_VAT',
+            'Total_VAT_Amount',
+            'Total_Amount_Incl_VAT'
+        ] ;
+
+        $model = Yii::$app->Navhelper->loadmodel($data,$model,$skip);
+
+        //get New Key Before Updating        
+
+        $results = Yii::$app->Navhelper->updateData($service, $model); // update  requisition line
+        return $results;
+
+    }
+
+    /* Get Requisition Line */
     public function actionGetline($Document_No, $Line_No)
     {
          $service = Yii::$app->params['ServiceName']['RequisitionLines'];
+
+         $filter = [
+            'Document_No' => $Document_No,
+            'Line_No' => $Line_No
+         ];
+
+         $result = Yii::$app->Navhelper->getData($service, $filter);
+         return $result[0];
+    }
+
+    /* Get Salesinvoice line to update */
+
+    public function actionGetsalesinvoiceline($Document_No, $Line_No)
+    {
+         $service = Yii::$app->params['ServiceName']['SalesInvoiceLine'];
 
          $filter = [
             'Document_No' => $Document_No,
@@ -450,6 +640,24 @@ class SiteController extends Controller
     public function actionCreateRequisition()
     {
         $service = Yii::$app->params['ServiceName']['RequisitionCard'];
+        $data = [];
+            
+        $results = Yii::$app->Navhelper->postData($service, $data);
+
+        if(is_array($results))
+        {
+            return $results;
+        }else
+        {
+            return $results;
+        }
+    }
+
+    // Create a New Sales Invoice
+
+    public function actionCreateInvoice()
+    {
+        $service = Yii::$app->params['ServiceName']['SalesInvoice'];
         $data = [];
             
         $results = Yii::$app->Navhelper->postData($service, $data);
@@ -543,6 +751,162 @@ class SiteController extends Controller
         
     }
 
+    // Post a new Invoice Header
+
+     public function actionUpdateInvoice() {
+
+        $model = new Salesinvoice();
+        $service = Yii::$app->params['ServiceName']['SalesInvoice'];
+
+        // Takes raw data from the request
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+        
+       
+
+        $model = Yii::$app->Navhelper->loadmodel($data,$model);
+               
+        $results = Yii::$app->Navhelper->updateData($service, $model); // Complete line requisition 
+        return $results;
+        
+    }
+
+    // Get Customers for Receipting
+
+     public function actionReceiptingCustomers()
+    {
+        $service = Yii::$app->params['ServiceName']['CustomerList'];
+        $filter = [
+            'Has_Invoice' => true
+        ];
+            
+        $results = Yii::$app->Navhelper->getData($service, $filter);
+
+        if(is_array($results))
+        {
+            return $results;
+        }else
+        {
+            return $results;
+        }
+    }
+
+    // Get The receipt card
+
+    public function actionReceipt($id)
+    {
+        $service = Yii::$app->params['ServiceName']['ReceiptCard'];
+        $filter = [
+            'Receipt_No' => $id
+        ];
+            
+        $results = Yii::$app->Navhelper->getData($service, $filter);
+
+        if(is_array($results))
+        {
+            return $results[0];
+        }else
+        {
+            return $results;
+        }
+    }
+
+    // Customer Ledger Entries that are open
+
+
+    public function actionCustomerledgerentries($Customer_No)
+    {
+        $service = Yii::$app->params['ServiceName']['CustomerLedgerEntries'];
+        $filter = [
+            'Customer_No' => $Customer_No,
+            'Open' => true
+        ];
+            
+        $results = Yii::$app->Navhelper->getData($service, $filter);
+
+        if(is_array($results))
+        {
+            return $results;
+        }else
+        {
+            return $results;
+        }
+    }
+
+    public function actionNewpayment()
+    {
+        $service = Yii::$app->params['ServiceName']['ReceiptCard'];
+        $filter = [];
+            
+        $results = Yii::$app->Navhelper->postData($service, $filter);
+
+        if(is_array($results))
+        {
+            return $results;
+        }else
+        {
+            return $results;
+        }
+    }
+
+    public function actionSuggestlines($receiptNo,$customerNo)
+    {
+
+        $service = Yii::$app->params['ServiceName']['MobileCodeunit'];
+
+         // Call Mobile Code Unit
+
+        $args = [
+            'receiptNo'=> $receiptNo,
+            'customerNo' => $customerNo,
+        ];
+
+        $res = Yii::$app->Navhelper->Mobile($service,$args,'IanSuggestCustLedLinesInReceiptLines');
+        return $res;
+    }
+
+    // Update Cash Receipt Card
+
+    public function actionUpdatecashreceipt() {
+
+        $model = new Receipt();
+        $service = Yii::$app->params['ServiceName']['ReceiptCard'];
+
+        // Takes raw data from the request
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+        // return $data;
+
+        $model = Yii::$app->Navhelper->loadmodel($data,$model);
+
+        $key = $this->refreshreceipt($data->Receipt_No);
+        
+        $model->Key = $key;
+               
+        $results = Yii::$app->Navhelper->updateData($service, $model); // Complete line requisition 
+        return $results;
+        
+    }
+
+    public function refreshreceipt($receiptNo)
+    {
+         $service = Yii::$app->params['ServiceName']['Payments'];
+         $filter = [
+            'Receipt_No' => $receiptNo
+         ];
+
+         $result = Yii::$app->Navhelper->getData($service,$filter);
+         return $result[0]->Key;
+
+    }
+
+    public function actionSelectline()
+    {
+
+    }
 
 
 
