@@ -27,6 +27,8 @@ public $Description;
 public $Tax_WithHold;
 public $V_A_T_Percent;
 public $Reference_No;
+public $Receipt_No;
+public $Line_No;
 
     public function rules()
     {

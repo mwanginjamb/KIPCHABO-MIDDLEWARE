@@ -14,7 +14,7 @@ use backend\models\Requisition;
 use backend\models\Salesinvoiceline;
 use backend\models\Salesinvoice;
 use backend\models\Receipt;
-
+use backend\models\Cashreceiptline;
 /**
  * Site controller
  */
@@ -31,7 +31,9 @@ class SiteController extends Controller
             $action->id == 'updatesalesinvoiceline' ||
             $action->id == 'addsalesinvoiceline' ||
             $action->id == 'create-invoice' ||
-            $action->id == 'updatecashreceipt'
+            $action->id == 'updatecashreceipt' ||
+            $action->id == 'updatecashreceiptline' ||
+            $action->id == 'updateamounttoreceipt'
         ) {
             $this->enableCsrfValidation = false;
         }
@@ -95,7 +97,14 @@ class SiteController extends Controller
                             'newpayment',
                             'updatecashreceipt',
                             'suggestlines',
-                            'refreshreceipt'
+                            'refreshreceipt',
+                            'updatecashreceiptline',
+                            'updateamounttoreceipt',
+                            'sale',
+                            'postreceipt',
+                            'postsaleinvoice',
+                            'filtersales',
+                            'filterpayments'
                         ],
                         'allow' => true,
                         'roles' => ['?'],
@@ -137,6 +146,13 @@ class SiteController extends Controller
                     'newpayment',
                     'updatecashreceipt',
                     'suggestlines',
+                    'updatecashreceiptline',
+                    'updateamounttoreceipt',
+                    'sale',
+                    'postreceipt',
+                    'postsaleinvoice',
+                    'filtersales',
+                    'filterpayments'
                 ],
                 'formatParam' => '_format',
                 'formats' => [
@@ -660,6 +676,7 @@ class SiteController extends Controller
         $service = Yii::$app->params['ServiceName']['SalesInvoice'];
         $data = [];
             
+        // Create a post request to the Nav Service with empty params -> for initial data initialization like no. series    
         $results = Yii::$app->Navhelper->postData($service, $data);
 
         if(is_array($results))
@@ -903,10 +920,176 @@ class SiteController extends Controller
 
     }
 
-    public function actionSelectline()
+    public function actionUpdatecashreceiptline()
+    {
+        $service = Yii::$app->params['ServiceName']['CashReceiptLines'];
+        $model = new Cashreceiptline();
+        // Takes raw data from the request
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+         $filter = [
+            'Receipt_No' => $data->Receipt_No,
+            'Customer_No' => $data->Customer_No,
+            'Line_No' => $data->Line_No
+         ];
+
+         // Get Line to Update
+
+         $Line = Yii::$app->Navhelper->getData($service, $filter);
+
+         //Load model with Line Data
+         if(!is_string($Line)){ // Array of Object Was Returned
+            $model = Yii::$app->Navhelper->loadmodel($Line[0],$model);
+            $model->Select = !$model->Select; //Toggle Select Status
+            if(!empty($data->Amount_To_Receipt)){
+                $model->Amount_To_Receipt = $data->Amount_To_Receipt;  
+            }
+            // Do actual update
+            $update = Yii::$app->Navhelper->updateData($service, $model);
+            return $update;
+        }else{ // Return Navision Error
+            return $Line;
+        }
+         
+    }
+
+    public function actionUpdateamounttoreceipt()
+    {
+        $service = Yii::$app->params['ServiceName']['CashReceiptLines'];
+        $model = new Cashreceiptline();
+        // Takes raw data from the request
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+         $filter = [
+            'Receipt_No' => $data->Receipt_No,
+            'Customer_No' => $data->Customer_No,
+            'Line_No' => $data->Line_No
+         ];
+
+         // Get Line to Update
+
+         $Line = Yii::$app->Navhelper->getData($service, $filter);
+
+         //Load model with Line Data
+         if(!is_string($Line)){ // Array of Object Was Returned
+            $model = Yii::$app->Navhelper->loadmodel($Line[0],$model);
+            
+            
+            $model->Amount_To_Receipt = $data->Amount_To_Receipt;  
+            
+            // Do actual update
+            $update = Yii::$app->Navhelper->updateData($service, $model);
+            return $update;
+        }else{ // Return Navision Error
+            return $Line;
+        }
+         
+    }
+
+    public function actionSale($id)
     {
 
+         $service = Yii::$app->params['ServiceName']['PostedSalesInvoice'];
+         $filter = [
+            'No' => $id
+         ];
+
+         $result = Yii::$app->Navhelper->getData($service,$filter);
+
+         if(is_array($result)){
+            return $result[0];
+         }else{
+            $result;
+         }
+         
     }
+
+    public function actionPostreceipt($No){
+        $service = Yii::$app->params['ServiceName']['MobileCodeunit'];
+        $args = [
+            'receiptNo' => $No
+        ];
+        $res = Yii::$app->Navhelper->Mobile($service,$args,'IanPostCustomerReceipt');
+        return $res;
+
+    }
+
+    public function actionPostsaleinvoice($No){
+        $service = Yii::$app->params['ServiceName']['MobileCodeunit'];
+        $args = [
+            'invoiceNo' => $No
+        ];
+        $res = Yii::$app->Navhelper->Mobile($service,$args,'IanPostSalesInvoice');
+        return $res;
+
+    }
+
+    // Get posted sales by date
+
+    public function actionFiltersales($startdate, $enddate="")
+    {
+        
+        $service1 = Yii::$app->params['ServiceName']['MobileCodeunit'];
+        $service2 = Yii::$app->params['ServiceName']['PostedSalesInvoicesMobile'];
+
+         $enddate = empty(trim($enddate))?$startdate:$enddate;
+
+        // Generate Filtered Sales List
+
+        $args = [
+            'startDate' => $startdate,
+            'endDate' => $enddate
+        ];
+
+        $coderes = Yii::$app->Navhelper->Mobile($service1,$args,'IanGenerateFilteredSales');
+
+
+        // Read Filtered List
+
+         $results = $this->actionGet($service2);
+
+         return $results;
+
+
+    }
+
+    // Get and Filter Posted Payments by date
+
+     public function actionFilterpayments($startdate, $enddate="")
+    {
+        
+        $service1 = Yii::$app->params['ServiceName']['MobileCodeunit'];
+        $service2 = Yii::$app->params['ServiceName']['PostedCashReceiptMobile'];
+
+        $enddate = empty(trim($enddate))?$startdate:$enddate;
+
+        // Generate Filtered Sales List
+
+        $args = [
+            'startDate' => $startdate,
+            'endDate' => $enddate
+        ];
+
+
+
+        $coderes = Yii::$app->Navhelper->Mobile($service1,$args,'IanGenerateFilteredCashReceipts');
+        if(is_string($coderes)){
+            return $coderes;
+        }
+
+        // Read Filtered List
+
+         $results = $this->actionGet($service2);
+
+         return $results;
+
+
+    }
+        
 
 
 

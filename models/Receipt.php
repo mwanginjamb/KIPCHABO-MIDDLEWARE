@@ -27,6 +27,7 @@ public $Total_Balance;
 public $Total_Amount;
 public $Created_By;
 public $Created_On;
+public $Posted;
 
     public function rules()
     {

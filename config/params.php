@@ -48,6 +48,10 @@ return [
         'SalesInvoiceList' => 'SalesInvoiceList', //9301
         'SalesInvoice' => 'SalesInvoice', // 43
         'SalesInvoiceLine' =>  'SalesInvoiceLine', // 47
+        'PostedSalesInvoices' => 'PostedSalesInvoices', // 143 --> List
+        'PostedSalesInvoice' => 'PostedSalesInvoice', //132 --> Card
+        'PostedSalesInvoicesMobile' => 'PostedSalesInvoicesMobile', // 50000 List Page
+        'PostedCashReceiptMobile' => 'PostedCashReceiptMobile', //50045 List Page
 
         'RequisitionList' => 'RequisitionList', // 60025 (Page)
         'ReleasedRequisitionList' => 'ReleasedRequisitionList', // 60026 (Page)
@@ -65,7 +69,8 @@ return [
         'Dimensions' => 'Dimensions', // 560 (Page)
         'CustomerList' => 'CustomerList', //22 (Page)
 
-        'MobileCodeunit' => 'MobileCodeunit', // 500013 - Codeunit
+
+        'MobileCodeunit' => 'MobileCodeunit', // 50014 - Codeunit
     ],
     'QualificationsMimeTypes' => [
 
