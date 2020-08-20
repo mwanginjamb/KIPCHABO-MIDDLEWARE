@@ -104,7 +104,8 @@ class SiteController extends Controller
                             'postreceipt',
                             'postsaleinvoice',
                             'filtersales',
-                            'filterpayments'
+                            'filterpayments',
+                            'itemavailabilitybylocation',
                         ],
                         'allow' => true,
                         'roles' => ['?'],
@@ -152,7 +153,8 @@ class SiteController extends Controller
                     'postreceipt',
                     'postsaleinvoice',
                     'filtersales',
-                    'filterpayments'
+                    'filterpayments',
+                    'itemavailabilitybylocation'
                 ],
                 'formatParam' => '_format',
                 'formats' => [
@@ -487,6 +489,8 @@ class SiteController extends Controller
             'docNo' => $data->Document_No,
         ];
 
+        // return $args;
+
         $res = Yii::$app->Navhelper->Mobile($service,$args,'IanCreateTransferOrderLines');
         return $res;
 
@@ -538,7 +542,7 @@ class SiteController extends Controller
             'location' => $data->Location_Code,
             'quantityVar' => $data->Quantity,
             'unitPrice' => $data->Unit_Price,
-            'unitOfMeasure' => $data->Unit_of_Measure_Code,
+            // 'unitOfMeasure' => $data->Unit_of_Measure_Code,
             'docNo' => $data->Document_No
         ];
 
@@ -585,6 +589,7 @@ class SiteController extends Controller
           
 
         $model = Yii::$app->Navhelper->loadmodel($data,$model);
+
 
         //get New Key Before Updating        
 
@@ -758,10 +763,17 @@ class SiteController extends Controller
         // Convert it into a PHP object
         $data = json_decode($json);
 
-        
+        // Fetch the record to update
+        $filter = [
+            'No' => $data->No
+        ];
+        $record = Yii::$app->Navhelper->getData($service, $filter);
+
+        //return $record[0];
        
 
         $model = Yii::$app->Navhelper->loadmodel($data,$model);
+        $model->Key = $record[0]->Key; // Use regenerated Key Always
                
         $results = Yii::$app->Navhelper->updateData($service, $model); // Complete line requisition 
         return $results;
@@ -1046,7 +1058,9 @@ class SiteController extends Controller
         ];
 
         $coderes = Yii::$app->Navhelper->Mobile($service1,$args,'IanGenerateFilteredSales');
-
+         if(is_string($coderes)){
+            return $coderes;
+        }
 
         // Read Filtered List
 
@@ -1087,6 +1101,19 @@ class SiteController extends Controller
 
          return $results;
 
+
+    }
+
+    public function actionItemavailabilitybylocation($No){
+         $service = Yii::$app->params['ServiceName']['ItemBalanceByLocation'];
+
+         $filter = [
+            'No' => $No,
+        ];
+
+        $results = Yii::$app->Navhelper->getData($service,$filter);
+
+        return $results[0];
 
     }
         
