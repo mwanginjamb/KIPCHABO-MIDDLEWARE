@@ -1104,16 +1104,24 @@ class SiteController extends Controller
 
     }
 
-    public function actionItemavailabilitybylocation($No){
-         $service = Yii::$app->params['ServiceName']['ItemBalanceByLocation'];
+    public function actionItemavailabilitybylocation($No, $Location=""){
+         $service = Yii::$app->params['ServiceName']['ItemLedgerEntries'];
 
-         $filter = [
-            'No' => $No,
-        ];
+         if(!empty($Location)) {
+             $filter = [
+                 'Item_No' => $No,
+                 'Location_Code' => $Location
+             ];
+         }else{
+             $filter = [
+                 'Item_No' => $No
+             ];
+         }
+
 
         $results = Yii::$app->Navhelper->getData($service,$filter);
 
-        return $results[0];
+        return $results;
 
     }
         

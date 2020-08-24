@@ -69,6 +69,7 @@ return [
         'Dimensions' => 'Dimensions', // 560 (Page)
         'CustomerList' => 'CustomerList', //22 (Page)
         'ItemBalanceByLocation' => 'ItemBalanceByLocation', //492 (Page)
+        'ItemLedgerEntries' => 'ItemLedgerEntries', // 38 (Page)
 
 
         'MobileCodeunit' => 'MobileCodeunit', // 50014 - Codeunit
