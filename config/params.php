@@ -3,7 +3,7 @@ return [
     'adminEmail' => 'customer@softeboard.com',
     'supportEmail' => 'customer@softeboard.com',
     'senderEmail' => 'customer@softeboard.com',
-    'senderName' => 'HRMIS mailer',
+    'senderName' => 'HRMIS Mailer',
     'user.passwordResetTokenExpire' => 3600,
     'powered' => 'Iansoft Ltd',
     'NavisionUsername'=>'HP ELITEBOOK 840 G5',
@@ -16,8 +16,8 @@ return [
     'server'=>'FRANCIS',//'app-svr-dev.rbss.com',//Navision Server
     'WebServicePort'=>'5047',//Nav server Port
     'ServerInstance'=>'DynamicsNAV100',//Nav Server Instance
-    'CompanyName'=>'Commercial',//Nav Company,
-    'CompanyNameStripped' => 'Commercial$',
+    'CompanyName'=>'Commercial',//Nav Web Service Company,
+    'DBCompanyName' => 'Commercial$',
     'ldPrefix'=>'francis',//ACTIVE DIRECTORY prefix
     'adServer' => 'DC2SVR.AASCIENCES.AC.KE', //Active directory domain controller
 
@@ -70,6 +70,18 @@ return [
         'CustomerList' => 'CustomerList', //22 (Page)
         'ItemBalanceByLocation' => 'ItemBalanceByLocation', //492 (Page)
         'ItemLedgerEntries' => 'ItemLedgerEntries', // 38 (Page)
+
+        /*Green Leaf Collection*/
+
+        'GreenLeafCollectionList' => 'GreenLeafCollectionList', // 50200
+        'GreenLeafCollectionCard' => 'GreenLeafCollectionCard', //50201
+        'GreenLeafCollectionLines' => 'GreenLeafCollectionLines', //50202
+
+        'VendorList' => 'VendorList', //27 --> We get Farmers here
+        'Shades' => 'Shades', //90146 --> We get Shades here
+        'FarmerList' => 'FarmerList', // 50208 Outgrowerlist
+        'FarmerCard' => 'FarmerCard', // 50209 Outgrower Card
+        'Routes' => 'Routes',
 
 
         'MobileCodeunit' => 'MobileCodeunit', // 50014 - Codeunit

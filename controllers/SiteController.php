@@ -15,16 +15,16 @@ use backend\models\Salesinvoiceline;
 use backend\models\Salesinvoice;
 use backend\models\Receipt;
 use backend\models\Cashreceiptline;
+use backend\models\Leafcollection;
+use backend\models\Leafcollectionline;
+use backend\models\Vendor; // Active Record Model
+use backend\models\Farmer; // Same as Vendor but lacks active record support, just a data model
 /**
  * Site controller
- */
-class SiteController extends Controller
-{
 
-   public function beforeAction($action)
-    {            
-        if (
-            $action->id == 'addline' || 
+
+
+ $action->id == 'addline' || 
             $action->id == 'update-requisition' || 
             $action->id == 'updaterequisitionline' ||
             $action->id == 'update-invoice' ||
@@ -34,7 +34,37 @@ class SiteController extends Controller
             $action->id == 'updatecashreceipt' ||
             $action->id == 'updatecashreceiptline' ||
             $action->id == 'updateamounttoreceipt'
-        ) {
+ */
+class SiteController extends Controller
+{
+
+   public function beforeAction($action)
+    {  
+
+        $allowedActions = [
+            'grenleafcollection',
+            'updategreenleafcollection',
+            'greenleafcollectionline',
+            'updategreenleafcollectionline',
+            'addline',
+            'update-requisition',
+            'updaterequisitionline',
+            'update-invoice',
+            'updatesalesinvoiceline',
+            'addsalesinvoiceline',
+            'create-invoice',
+            'updatecashreceipt',
+            'updatecashreceiptline',
+            'updateamounttoreceipt',
+            'leafcollectioncard',
+            'collectionlinetoupdate',
+            'leafcollectioncard',
+            'farmer-card',
+            'add-farmer',
+            'add-media',
+        ];
+
+        if (in_array($action->id , $allowedActions) ) {
             $this->enableCsrfValidation = false;
         }
 
@@ -54,7 +84,7 @@ class SiteController extends Controller
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
-                        'actions' => ['login', 'error'],
+                        'actions' => ['login', 'error','images'],
                         'allow' => true,
                     ],
                     [
@@ -106,6 +136,11 @@ class SiteController extends Controller
                             'filtersales',
                             'filterpayments',
                             'itemavailabilitybylocation',
+                            'leafcollectioncard',
+                            'farmer-card',
+                            'add-farmer',
+                            'shades',
+                            'add-media',
                         ],
                         'allow' => true,
                         'roles' => ['?'],
@@ -154,7 +189,17 @@ class SiteController extends Controller
                     'postsaleinvoice',
                     'filtersales',
                     'filterpayments',
-                    'itemavailabilitybylocation'
+                    'itemavailabilitybylocation',
+                    'leafcollection',
+                    'updateleafcollection',
+                    'leafcollectionline',
+                    'updateleafcollectionline',
+                    'leafcollectioncard',
+                    'collectionlinetoupdate',
+                    'farmer-card',
+                    'add-farmer',
+                    'shades',
+                    'add-media',
                 ],
                 'formatParam' => '_format',
                 'formats' => [
@@ -1124,6 +1169,272 @@ class SiteController extends Controller
         return $results;
 
     }
+
+
+    // New Leaf Collection Request
+
+    public function actionLeafcollection()
+    {
+        $service = Yii::$app->params['ServiceName']['GreenLeafCollectionCard'];
+        $filter = [];
+            
+        $results = Yii::$app->Navhelper->postData($service, $filter);
+
+        if(is_array($results))
+        {
+            return $results;
+        }else
+        {
+            return $results;
+        }
+    }
+
+    // Get Collection Card
+
+     public function actionLeafcollectioncard($id)
+    {
+        $service = Yii::$app->params['ServiceName']['GreenLeafCollectionCard'];
+        
+
+        $filter = ['No' => $id ];
+            
+        $results = Yii::$app->Navhelper->getData($service, $filter);
+
+        if(is_array($results))
+        {
+            return $results[0];
+        }else
+        {
+            return $results;
+        }
+    }
+
+    // Update Leaf Collection Header
+
+    public function actionUpdateleafcollection()
+    {
+        $service = Yii::$app->params['ServiceName']['GreenLeafCollectionCard'];
+        $model = new Leafcollection();
+        // Takes raw data from the request
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+        // Get Record to Update
+
+         $refresh = Yii::$app->Navhelper->getData($service, ['No' => $data->No]);
+
+         //Load model with Line Data
+         if(!is_string($refresh)){ // Array of Object Was Returned
+            
+
+             $model = Yii::$app->Navhelper->loadmodel($data,$model);
+             $model->Key = $refresh[0]->Key; 
+            
+            // Do actual update
+            $update = Yii::$app->Navhelper->updateData($service, $model);
+            return $update;
+        }else{ // Return Navision Error
+            return $refresh;
+        }
+         
+    }
+
+    //New Leaf Collection Line
+
+    public function actionLeafcollectionline($DocNo)
+    {
+        $service = Yii::$app->params['ServiceName']['GreenLeafCollectionLines'];
+        $data = ['No' => $DocNo];
+            
+        $results = Yii::$app->Navhelper->postData($service, $data);
+
+        if(is_array($results))
+        {
+            return $results;
+        }else
+        {
+            return $results;
+        }
+    }
+
+    // Fetch Gleaf Line to Update
+
+     public function actionCollectionlinetoupdate($No,$Weighment_No)
+    {
+        $service = Yii::$app->params['ServiceName']['GreenLeafCollectionLines'];
+        $data = [
+            'No' => $DocNo,
+            'Weighment_No' => $LineNo
+        ];
+            
+        $results = Yii::$app->Navhelper->getData($service, $data);
+
+        if(is_array($results))
+        {
+            return $results[0];
+        }else
+        {
+            return $results;
+        }
+    }
+
+
+    // Update Leaf Collection Line
+
+     public function actionUpdateleafcollectionline()
+    {
+        $service = Yii::$app->params['ServiceName']['GreenLeafCollectionLines'];
+        $model = new Leafcollectionline();
+        // Takes raw data from the request
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+        // Get Record to Update
+
+         $refresh = Yii::$app->Navhelper->getData($service, ['Weighment_No' => $data->Weighment_No]);
+
+         //Load model with Line Data
+         if(!is_string($refresh)){ // Array of Object Was Returned
+            
+
+             $model = Yii::$app->Navhelper->loadmodel($data,$model);
+             $model->Key = $refresh[0]->Key; 
+            
+            // Do actual update
+            $update = Yii::$app->Navhelper->updateData($service, $model);
+            return $update;
+        }else{ // Return Navision Error
+            return $refresh;
+        }
+         
+    }
+
+    //Get Farmer Card farmer-card
+
+    public function actionFarmerCard($id)
+    {
+        $service = Yii::$app->params['ServiceName']['FarmerCard'];
+        $data = ['No' => $id];
+            
+        $results = Yii::$app->Navhelper->getData($service, $data);
+
+        if(is_array($results))
+        {
+            return $results[0];
+        }else
+        {
+            return $results;
+        }
+    }
+
+    public function actionAddFarmer()
+    {
+        $model = new Farmer();
+        $service = Yii::$app->params['ServiceName']['FarmerCard'];
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+        $model = Yii::$app->Navhelper->loadmodel($data,$model);
+       
+               
+        $results = Yii::$app->Navhelper->postData($service, $model); // Post Farmer data to ERP
+
+        return $results;
+        
+        /*
+        $model = Vendor::find()->where(['No_' => $data->farmerId])->one();
+
+        $bin = base64_decode($data->ImageBinary);
+        $size = getImageSizeFromString($bin);
+        $ext = substr($size['mime'], 6);
+        $img_file = "filename.{$ext}";
+        file_put_contents($img_file, $bin);
+        
+        // Call code unit 
+
+         $args = [
+            'filePath' => "D:\www\api\backend\web\\".$img_file,
+            'frontID' => true,
+            'backID' => false,
+            'signature' => false,
+            'vendorNo' => $data->farmerId
+         ];
+         $service = Yii::$app->params['ServiceName']['MobileCodeunit'];
+         $res = Yii::$app->Navhelper->Mobile($service,$args,'IanSaveImages');
+         return $res;*/
+            
+        
+    }
+
+    // Get Shades
+
+     public function actionShades($No)
+    {
+        $service = Yii::$app->params['ServiceName']['Shades'];
+        $filter = [
+            'Route_No' => $No
+        ];
+            
+        $results = Yii::$app->Navhelper->getData($service, $filter);
+
+        if(is_array($results))
+        {
+            return $results;
+        }else
+        {
+            return $results;
+        }
+    }
+
+    // 'add-media',
+
+    public function actionAddMedia()
+    {
+        $model = new Farmer();
+        $service = Yii::$app->params['ServiceName']['FarmerCard'];
+        $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+
+        $mediaType = $data->MediaType; // IDBACK, IDFRONT, PHOTO
+        $FarmerID = $data->farmerId;
+
+
+
+        /*Process Media for Saving*/
+
+
+        $bin = base64_decode($data->ImageBinary);
+        $size = getImageSizeFromString($bin);
+        $ext = substr($size['mime'], 6);
+        $img_file = $mediaType.'_'.$FarmerID.'.'.$ext;
+        file_put_contents($img_file, $bin);
+
+        /*Prepare Service For Update*/
+
+         // Get Record to Update
+
+         $refresh = Yii::$app->Navhelper->getData($service, ['No' => $FarmerID]);
+
+         //Load model with Line Data
+         if(!is_string($refresh)){ // Array of Object Was Returned            
+
+             $model = Yii::$app->Navhelper->loadmodel($refresh[0],$model);
+             $model->$mediaType = $img_file;            
+            // Do actual update
+            $update = Yii::$app->Navhelper->updateData($service, $model);
+            return $update;
+        }else{ // Return Navision Error
+            return $refresh;
+        }
+        
+       
+
+    }
+
         
 
 

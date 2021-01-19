@@ -19,6 +19,13 @@ return [
                     'application/json' => 'yii\web\JsonParser',
                 ]
         ],
+        'db' => [
+            'class' => 'yii\db\Connection',
+            'dsn' => 'sqlsrv:server=FRANCIS\SQLEXPRESS14;database=KIP',
+            'username' => 'Njambi',
+            'password' => 'njambi123',
+            'charset' => 'utf8',
+        ],
         'user' => [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
