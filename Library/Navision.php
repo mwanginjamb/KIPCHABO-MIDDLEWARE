@@ -41,6 +41,17 @@ class Navision extends Component
         }
     }
 
+     public function readEntry($credentials, $soapWsdl,$filter,$filterValue)
+    {
+        $client = $this->createClient($credentials, $soapWsdl);
+        try {
+            $result = $client->Read([$filter => $filterValue]);
+            return $result;
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
     public function addEntry($credentials, $soapWsdl, $Entry, $EntryID)
     {
         /* print '<pre>';
@@ -466,27 +477,7 @@ class Navision extends Component
             return $e->getMessage();
         }
     }
-    public function readEntry($credentials, $soapWsdl, $filter = '')
-    {
-
-
-        //try
-        //{
-        $client = $this->createClient($credentials, $soapWsdl);
-        //var_dump($client); exit;
-        try {
-            //$result = $client->ReadMultiple(['filter' => [], 'setSize' => 1]);
-            $result = $client->ReadMultiple(['filter' => $filter, 'setSize' => 1]);
-            return $result;
-        } catch (\SoapFault $e) {
-            return $e->getMessage();
-        }
-        //}
-        //catch (yii\base\ErrorException $e) {
-        //  return $e->getMessage();
-        //}
-
-    }
+   
 
     public function updateEntry($credentials, $soapWsdl, $Entry, $EntryID)
     {

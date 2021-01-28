@@ -62,6 +62,7 @@ class SiteController extends Controller
             'farmer-card',
             'add-farmer',
             'add-media',
+            'auth'
         ];
 
         if (in_array($action->id , $allowedActions) ) {
@@ -101,7 +102,7 @@ class SiteController extends Controller
                             'itemcard',
                             'requisitions',
                             'requisitioncard',
-                            'locationlist',
+                               'locationlist',
                             'unitmeasure',
                             'addline',
                             'releasedrequisitions',
@@ -141,6 +142,7 @@ class SiteController extends Controller
                             'add-farmer',
                             'shades',
                             'add-media',
+                            'auth'
                         ],
                         'allow' => true,
                         'roles' => ['?'],
@@ -200,6 +202,7 @@ class SiteController extends Controller
                     'add-farmer',
                     'shades',
                     'add-media',
+                    'auth',
                 ],
                 'formatParam' => '_format',
                 'formats' => [
@@ -1309,6 +1312,26 @@ class SiteController extends Controller
             return $refresh;
         }
          
+    }
+
+    // Authentication
+
+    public function actionAuth()
+    {
+        $service = Yii::$app->params['ServiceName']['UserSetup'];
+        $credentials = new \stdClass();
+         $json = file_get_contents('php://input');
+        // Convert it into a PHP object
+        $data = json_decode($json);
+        $NavisionUsername = $data->Username;
+        $NavisionPassword = $data->Password;
+
+        $credentials->UserName = $NavisionUsername;
+        $credentials->PassWord = $NavisionPassword;
+
+        $result = (Yii::$app->Navhelper->findOne($service,$credentials,'User_ID', Yii::$app->params['AdPrefix'].'\\'.$NavisionUsername));
+
+        return $result;
     }
 
     //Get Farmer Card farmer-card

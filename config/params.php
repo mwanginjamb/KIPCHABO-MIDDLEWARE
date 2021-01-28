@@ -18,7 +18,7 @@ return [
     'ServerInstance'=>'DynamicsNAV100',//Nav Server Instance
     'CompanyName'=>'Commercial',//Nav Web Service Company,
     'DBCompanyName' => 'Commercial$',
-    'ldPrefix'=>'francis',//ACTIVE DIRECTORY prefix
+    'AdPrefix'=>'FRANCIS',//ACTIVE DIRECTORY prefix
     'adServer' => 'DC2SVR.AASCIENCES.AC.KE', //Active directory domain controller
 
     //sharepoint config
@@ -71,7 +71,7 @@ return [
         'ItemBalanceByLocation' => 'ItemBalanceByLocation', //492 (Page)
         'ItemLedgerEntries' => 'ItemLedgerEntries', // 38 (Page)
 
-        /*Green Leaf Collection*/
+        /* KAMARICH SERVICES Green Leaf Collection  -- NOT INVOLVED IN KIPCHABO*/
 
         'GreenLeafCollectionList' => 'GreenLeafCollectionList', // 50200
         'GreenLeafCollectionCard' => 'GreenLeafCollectionCard', //50201
@@ -85,6 +85,8 @@ return [
 
 
         'MobileCodeunit' => 'MobileCodeunit', // 50014 - Codeunit
+
+        'UserSetup' => 'UserSetup', //119
 
     ],
     'QualificationsMimeTypes' => [

@@ -48,6 +48,34 @@ class Navhelper extends Component{
         }
 
     }
+
+
+    /*
+     * Reads a single record
+     * */
+
+    public function findOne($service,$credentials,$filterKey, $filterValue){
+
+        $url  =  new Services($service);
+        $wsdl = $url->getUrl();
+
+        if(!Yii::$app->navision->isUp($wsdl,$credentials)) {
+
+            return ['error' => 'Service unavailable.'];
+
+        }
+
+
+        $res = (array)$result = Yii::$app->navision->readEntry($credentials, $wsdl, $filterKey, $filterValue);
+
+        if(count($res)){
+            return $res[$service];
+        }else{
+            return false;
+        }
+
+    }
+
     //create record(s)-----> post data
     public function postData($service,$data){
         $identity = \Yii::$app->user->identity;
@@ -1151,6 +1179,10 @@ class Navhelper extends Component{
         $modeldata = (get_object_vars($model)) ;
 
         foreach($post as $key => $val){
+
+            /*
+                @todo set keys that exist only in the model
+            */
 
             $model->$key = $val;
         }
